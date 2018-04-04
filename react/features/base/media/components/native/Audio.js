@@ -44,9 +44,13 @@ export default class Audio extends AbstractAudio {
         this._sound
             = this.props.src
                 ? new Sound(
-                    this.props.src,
+                    this.props.src, null,
                     this._soundLoadedCallback.bind(this))
                 : null;
+
+        // FIXME remove debug
+        // $FlowDisableNextLine
+        console.info(`SOUND SRC: ${this.props.src}`);
     }
 
     /**
