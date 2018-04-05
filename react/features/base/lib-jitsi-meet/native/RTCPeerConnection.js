@@ -243,7 +243,7 @@ function _synthesizeIPv6Addresses(sdp) {
     // The synthesis of IPv6 addresses on iOS is implemented using POSIX
     // 'getaddrinfo' and on Android by custom module which figures out a NAT64
     // prefix.
-    if (!NativeModules.POSIX && !NativeModules.NAT64Info) {
+    if (!NativeModules.POSIX && !NativeModules.NAT64AddrInfo) {
         return Promise.resolve(sdp);
     }
 
@@ -275,7 +275,8 @@ function _synthesizeIPv6Addresses0(sessionDescription) {
     const ips = new Map();
     const getaddrinfo = NativeModules.POSIX && NativeModules.POSIX.getaddrinfo;
     const getIPv6Address
-        = NativeModules.NAT64Info && NativeModules.NAT64Info.getIPv6Address;
+        = NativeModules.NAT64AddrInfo
+            && NativeModules.NAT64AddrInfo.getIPv6Address;
 
     do {
         const end = sdp.indexOf('\r\n', start);
@@ -311,14 +312,14 @@ function _synthesizeIPv6Addresses0(sessionDescription) {
                             || ips.set(ip, new Promise((resolve, reject) => {
                                 const v = ips.get(ip);
 
-                                // Even though getaddrinfo and getIPv6Address
-                                // do not always return exactly the same thing,
+                                // Even though getaddrinfo and getIPv6Address do
+                                // not always return exactly the same thing,
                                 // it's possible to have one handler capable of
                                 // handling both results.
-                                const onFullfilled = value => {
+                                const onFulfilled = value => {
                                     if (!value
-                                        || value.indexOf(':') === -1
-                                        || value === ips.get(ip)) {
+                                            || value.indexOf(':') === -1
+                                            || value === ips.get(ip)) {
                                         ips.delete(ip);
                                     } else {
                                         ips.set(ip, value);
@@ -330,19 +331,18 @@ function _synthesizeIPv6Addresses0(sessionDescription) {
                                     resolve(v);
                                 } else if (typeof getaddrinfo === 'function') {
                                     getaddrinfo(ip, undefined).then(
-                                        ([ { ai_addr: value } ]) => {
-                                            onFullfilled(value);
-                                        },
+                                        ([ { ai_addr: value } ]) =>
+                                            onFulfilled(value),
                                         reject);
                                 } else if (
                                     typeof getIPv6Address === 'function') {
                                     getIPv6Address(ip).then(
-                                        value => onFullfilled(value),
+                                        onFulfilled,
                                         reject);
                                 } else {
                                     reject(
                                         'The impossible just happened (no POSIX'
-                                            + ' nor NAT64Info module'
+                                            + ' or NAT64AddrInfo module'
                                             + ' available)');
                                 }
                             }));

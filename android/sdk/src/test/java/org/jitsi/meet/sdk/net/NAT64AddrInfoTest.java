@@ -91,7 +91,7 @@ public class NAT64AddrInfoTest {
         testPrefixSuffix(prefix, suffix, "162.63.65.189", "135.222.84.206");
     }
 
-    private static String buildIpv6Addr(
+    private static String buildIPv6Addr(
             String prefix, String suffix, String ipv4Hex) {
         String ipv6Str = prefix + ipv4Hex + suffix;
 
@@ -103,10 +103,10 @@ public class NAT64AddrInfoTest {
     }
 
     private void testPrefixSuffix(
-            String prefix, String suffix, String ipv4, String otherIpv4) {
+            String prefix, String suffix, String ipv4, String otherIPv4) {
         byte[] ipv4Bytes = NAT64AddrInfo.ipv4AddressStringToBytes(ipv4);
         String ipv4String = NAT64AddrInfo.bytesToHexString(ipv4Bytes);
-        String ipv6Str = buildIpv6Addr(prefix, suffix, ipv4String);
+        String ipv6Str = buildIPv6Addr(prefix, suffix, ipv4String);
 
         BigInteger ipv6Address = new BigInteger(ipv6Str, 16);
 
@@ -116,33 +116,35 @@ public class NAT64AddrInfoTest {
 
         assertNotNull("Failed to figure out NAT64 info", nat64AddrInfo);
 
-        String newIpv6 = nat64AddrInfo.getIPv6Address(ipv4);
+        String newIPv6 = nat64AddrInfo.getIPv6Address(ipv4);
 
         assertEquals(
                 NAT64AddrInfo.hexStringToIPv6String(ipv6Address.toString(16)),
-                newIpv6);
+                newIPv6);
 
-        byte[] ipv4Addr2 = NAT64AddrInfo.ipv4AddressStringToBytes(otherIpv4);
+        byte[] ipv4Addr2 = NAT64AddrInfo.ipv4AddressStringToBytes(otherIPv4);
         String ipv4Addr2Hex = NAT64AddrInfo.bytesToHexString(ipv4Addr2);
 
-        newIpv6 = nat64AddrInfo.getIPv6Address(otherIpv4);
+        newIPv6 = nat64AddrInfo.getIPv6Address(otherIPv4);
 
         assertEquals(
                 NAT64AddrInfo.hexStringToIPv6String(
-                        buildIpv6Addr(prefix, suffix, ipv4Addr2Hex)),
-                newIpv6);
+                        buildIPv6Addr(prefix, suffix, ipv4Addr2Hex)),
+                newIPv6);
     }
 
     @Test
-    public void testInvalidIpV4Format() {
-        testInvalidIpV4Format("256.1.2.3");
-        testInvalidIpV4Format("FE80:CD00:0000:0CDA:1357:0000:212F:749C");
+    public void testInvalidIPv4Format() {
+        testInvalidIPv4Format("256.1.2.3");
+        testInvalidIPv4Format("FE80:CD00:0000:0CDA:1357:0000:212F:749C");
     }
 
-    private void testInvalidIpV4Format(String ipv4Str) {
+    private void testInvalidIPv4Format(String ipv4Str) {
         try {
             NAT64AddrInfo.ipv4AddressStringToBytes(ipv4Str);
             fail("Did not throw IllegalArgumentException");
-        } catch (IllegalArgumentException exc) { /* OK */ }
+        } catch (IllegalArgumentException exc) {
+            /* OK */
+        }
     }
 }

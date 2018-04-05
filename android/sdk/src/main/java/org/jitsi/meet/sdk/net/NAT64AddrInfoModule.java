@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jitsi.meet.sdk;
+package org.jitsi.meet.sdk.net;
 
 import android.util.Log;
 
@@ -21,8 +21,6 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-
-import org.jitsi.meet.sdk.net.NAT64AddrInfo;
 
 import java.net.UnknownHostException;
 
@@ -34,17 +32,7 @@ import java.net.UnknownHostException;
  * [1]: https://tools.ietf.org/html/rfc6146
  * [2]: https://tools.ietf.org/html/rfc6052
  */
-public class NAT64InfoModule extends ReactContextBaseJavaModule {
-    /**
-     * The name of this module.
-     */
-    private final static String MODULE_NAME = "NAT64Info";
-
-    /**
-     * How long is the {@link NAT64AddrInfo} instance valid.
-     */
-    private final static long INFO_LIFETIME = 60 * 1000;
-
+public class NAT64AddrInfoModule extends ReactContextBaseJavaModule {
     /**
      * The host for which the module wil try to resolve both IPv4 and IPv6
      * addresses in order to figure out the NAT64 prefix.
@@ -52,31 +40,43 @@ public class NAT64InfoModule extends ReactContextBaseJavaModule {
     private final static String HOST = "nat64.jitsi.net";
 
     /**
-     * The {@code Log} tag {@code NAT64InfoModule} is to log messages with.
+     * How long is the {@link NAT64AddrInfo} instance valid.
+     */
+    private final static long INFO_LIFETIME = 60 * 1000;
+
+    /**
+     * The name of this module.
+     */
+    private final static String MODULE_NAME = "NAT64AddrInfo";
+
+    /**
+     * The {@code Log} tag {@code NAT64AddrInfoModule} is to log messages with.
      */
     private final static String TAG = MODULE_NAME;
 
     /**
      * The {@link NAT64AddrInfo} instance which holds NAT64 prefix/suffix.
      */
-    private NAT64AddrInfo natInfo;
+    private NAT64AddrInfo info;
 
     /**
-     * When {@link #natInfo} was created.
+     * When {@link #info} was created.
      */
-    private long createTimestamp;
+    private long infoTimestamp;
 
     /**
-     * Creates new {@link NAT64InfoModule}.
+     * Creates new {@link NAT64AddrInfoModule}.
+     *
      * @param reactContext the react context to be used by the new module
      * instance.
      */
-    NAT64InfoModule(ReactApplicationContext reactContext) {
+    public NAT64AddrInfoModule(ReactApplicationContext reactContext) {
         super(reactContext);
     }
 
     /**
      * Tries to obtain IPv6 address for given IPv4 address in NAT64 environment.
+     *
      * @param ipv4Address IPv4 address string.
      * @param promise a {@link Promise} which will be resolved either with IPv6
      * address for given IPv4 address or with {@code null} if no
@@ -85,33 +85,34 @@ public class NAT64InfoModule extends ReactContextBaseJavaModule {
      */
     @ReactMethod
     public void getIPv6Address(String ipv4Address, final Promise promise) {
-        // Reset if cached for too long
-        if (System.currentTimeMillis() - createTimestamp > INFO_LIFETIME) {
-            natInfo = null;
+        // Reset if cached for too long.
+        if (System.currentTimeMillis() - infoTimestamp > INFO_LIFETIME) {
+            info = null;
         }
-        String host = HOST;
 
-        if (natInfo == null) {
+        if (info == null) {
+            String host = HOST;
+
             try {
-                natInfo = NAT64AddrInfo.discover(host);
+                info = NAT64AddrInfo.discover(host);
             } catch (UnknownHostException e) {
                 Log.e(TAG, "NAT64AddrInfo.discover: " + host, e);
             }
-            createTimestamp = System.currentTimeMillis();
+            infoTimestamp = System.currentTimeMillis();
         }
 
-        try {
-            String result
-                = natInfo != null ? natInfo.getIPv6Address(ipv4Address) : null;
+        String result;
 
-            promise.resolve(result);
+        try {
+            result = info == null ? null : info.getIPv6Address(ipv4Address);
         } catch (IllegalArgumentException exc) {
             Log.e(TAG, "Failed to get IPv6 address for: " + ipv4Address, exc);
 
             // We don't want to reject. It's not a big deal if there's no IPv6
             // address resolved.
-            promise.resolve(null);
+            result = null;
         }
+        promise.resolve(result);
     }
 
     @Override

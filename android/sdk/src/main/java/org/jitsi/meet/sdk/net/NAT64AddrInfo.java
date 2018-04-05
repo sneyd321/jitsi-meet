@@ -29,17 +29,8 @@ import java.net.UnknownHostException;
  */
 public class NAT64AddrInfo {
     /**
-     * The NAT64 prefix added to construct IPv6 from an IPv4 address.
-     */
-    private final String prefix;
-
-    /**
-     * The NAT64 suffix (if any) used to construct IPv6 from an IPv4 address.
-     */
-    private final String suffix;
-
-    /**
      * Coverts bytes array to upper case HEX string.
+     *
      * @param bytes an array of bytes to be converted
      * @return ex. "010AFF" for an array of {1, 10, 255}.
      */
@@ -64,7 +55,7 @@ public class NAT64AddrInfo {
      * @throws UnknownHostException thrown by {@link InetAddress#getAllByName}.
      */
     public static NAT64AddrInfo discover(String host)
-        throws UnknownHostException {
+            throws UnknownHostException {
         InetAddress ipv4 = null;
         InetAddress ipv6 = null;
 
@@ -79,8 +70,7 @@ public class NAT64AddrInfo {
         }
 
         if (ipv4 != null && ipv6 != null) {
-            return figureOutNAT64AddrInfo(
-                    ipv4.getAddress(), ipv6.getAddress());
+            return figureOutNAT64AddrInfo(ipv4.getAddress(), ipv6.getAddress());
         }
 
         return null;
@@ -94,7 +84,6 @@ public class NAT64AddrInfo {
      * as returned by {@link InetAddress#getAddress()}.
      * @param ipv6AddrBytes the IPv6 address of the same host in NAT64 network,
      * as returned by {@link InetAddress#getAddress()}.
-     *
      * @return {@link NAT64AddrInfo} instance which contains the prefix/suffix
      * of the current NAT64 network or {@code null} if the prefix could not be
      * found.
@@ -202,7 +191,18 @@ public class NAT64AddrInfo {
     }
 
     /**
+     * The NAT64 prefix added to construct IPv6 from an IPv4 address.
+     */
+    private final String prefix;
+
+    /**
+     * The NAT64 suffix (if any) used to construct IPv6 from an IPv4 address.
+     */
+    private final String suffix;
+
+    /**
      * Creates new instance of {@link NAT64AddrInfo}.
+     *
      * @param prefix the NAT64 prefix.
      * @param suffix the NAT64 suffix.
      */
@@ -214,6 +214,7 @@ public class NAT64AddrInfo {
     /**
      * Based on the NAT64 prefix and suffix will create an IPv6 representation
      * of the given IPv4 address.
+     *
      * @param ipv4Address eg. '192.34.2.3'
      * @return IPv6 address string eg. FE80:CD00:0000:0CDA:1357:0000:212F:749C
      * @throws IllegalArgumentException if given string is not a valid IPv4
@@ -227,7 +228,7 @@ public class NAT64AddrInfo {
         newIPv6Str.append(bytesToHexString(ipv4AddressBytes));
 
         if (suffix != null) {
-            // Insert the 'u' octet
+            // Insert the 'u' octet.
             newIPv6Str.insert(16, "00");
             newIPv6Str.append(suffix);
         }
